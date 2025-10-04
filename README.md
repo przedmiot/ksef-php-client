@@ -506,8 +506,10 @@ $response = $client->testdata()->person()->remove(
 
 ## Examples
 
-<details>
-<summary><h3>Generate a KSEF certificate and convert to .p12 file</h3></summary>
+<details open>
+    <summary>
+        <h3>Generate a KSEF certificate and convert to .p12 file</h3>
+    </summary>
 
 ```php
 use N1ebieski\KSEFClient\Actions\ConvertDerToPem\ConvertDerToPemAction;
@@ -583,7 +585,10 @@ file_put_contents(Utility::basePath('config/certificates/ksef-certificate.p12'),
 ```
 </details>
 
-### Send an invoice and check for UPO
+<details>
+    <summary>
+        <h3>Send an invoice and check for UPO</h3>
+    </summary>
 
 ```php
 use N1ebieski\KSEFClient\Actions\ConvertDerToPem\ConvertDerToPemAction;
@@ -659,8 +664,13 @@ $upo = $client->sessions()->invoices()->upo([
     'invoiceReferenceNumber' => $sendResponse->referenceNumber
 ])->body();
 ```
+</details>
 
-### Fetch invoices using encryption key
+<details>
+    <summary>
+        <h3>Fetch invoices using encryption key</h3>
+    </summary>
+</details>
 
 ## Testing
 
