@@ -789,6 +789,7 @@ $qrCodes = $generateQRCodesHandler->handle(GenerateQRCodesAction::from([
     'document' => $faktura->toXml(),    
 ]));
 
+// Invoice link
 file_put_contents(Utility::basePath("var/qr/code1.png"), $qrCodes->code1);
 ```
 </details>
@@ -846,7 +847,10 @@ $qrCodes = $generateQRCodesHandler->handle(GenerateQRCodesAction::from([
     ]
 ]));
 
+// Invoice link
 file_put_contents(Utility::basePath("var/qr/code1.png"), $qrCodes->code1);
+
+// Certificate verification link
 file_put_contents(Utility::basePath("var/qr/code2.png"), $qrCodes->code2);
 ```
 
