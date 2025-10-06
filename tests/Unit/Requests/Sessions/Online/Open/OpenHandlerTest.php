@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use function N1ebieski\KSEFClient\Tests\getClientStub;
 use N1ebieski\KSEFClient\Requests\Sessions\Online\Open\OpenRequest;
 use N1ebieski\KSEFClient\Testing\Fixtures\Requests\Error\ErrorResponseFixture;
 use N1ebieski\KSEFClient\Testing\Fixtures\Requests\Sessions\Online\Open\OpenRequestFixture;
-
 use N1ebieski\KSEFClient\Testing\Fixtures\Requests\Sessions\Online\Open\OpenResponseFixture;
+
+use function N1ebieski\KSEFClient\Tests\getClientStub;
 
 /**
  * @return array<string, array{OpenRequestFixture, OpenResponseFixture}>

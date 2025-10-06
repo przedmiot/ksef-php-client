@@ -17,7 +17,7 @@ use N1ebieski\KSEFClient\Resources\AbstractResource;
 final class EnrollmentsResource extends AbstractResource implements EnrollmentsResourceInterface
 {
     public function __construct(
-        readonly private HttpClientInterface $client
+        private readonly HttpClientInterface $client
     ) {
     }
 

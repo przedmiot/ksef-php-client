@@ -14,7 +14,7 @@ use N1ebieski\KSEFClient\Resources\AbstractResource;
 final class TokenResource extends AbstractResource implements TokenResourceInterface
 {
     public function __construct(
-        readonly private HttpClientInterface $client
+        private readonly HttpClientInterface $client
     ) {
     }
 

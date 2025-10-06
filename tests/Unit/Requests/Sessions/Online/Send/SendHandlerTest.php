@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use function N1ebieski\KSEFClient\Tests\getClientStub;
 use N1ebieski\KSEFClient\Requests\Sessions\Online\Send\SendRequest;
 use N1ebieski\KSEFClient\Testing\Fixtures\Requests\Error\ErrorResponseFixture;
 use N1ebieski\KSEFClient\Testing\Fixtures\Requests\Sessions\Online\Send\AbstractSendRequestFixture;
@@ -15,8 +14,9 @@ use N1ebieski\KSEFClient\Testing\Fixtures\Requests\Sessions\Online\Send\SendFakt
 use N1ebieski\KSEFClient\Testing\Fixtures\Requests\Sessions\Online\Send\SendFakturaWWalucieObcejRequestFixture;
 use N1ebieski\KSEFClient\Testing\Fixtures\Requests\Sessions\Online\Send\SendFakturaZaliczkowaZDodatkowymNabywcaRequestFixture;
 use N1ebieski\KSEFClient\Testing\Fixtures\Requests\Sessions\Online\Send\SendFakturaZZalacznikiemRequestFixture;
-
 use N1ebieski\KSEFClient\Testing\Fixtures\Requests\Sessions\Online\Send\SendResponseFixture;
+
+use function N1ebieski\KSEFClient\Tests\getClientStub;
 
 /**
  * @return array<string, array{AbstractSendRequestFixture, SendResponseFixture}>

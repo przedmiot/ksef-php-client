@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use function N1ebieski\KSEFClient\Tests\getClientStub;
 use N1ebieski\KSEFClient\Requests\Invoices\Query\Metadata\MetadataRequest;
 use N1ebieski\KSEFClient\Testing\Fixtures\Requests\Error\ErrorResponseFixture;
 use N1ebieski\KSEFClient\Testing\Fixtures\Requests\Invoices\Query\Metadata\MetadataRequestFixture;
-
 use N1ebieski\KSEFClient\Testing\Fixtures\Requests\Invoices\Query\Metadata\MetadataResponseFixture;
+
+use function N1ebieski\KSEFClient\Tests\getClientStub;
 
 /**
  * @return array<string, array{MetadataRequestFixture, MetadataResponseFixture}>

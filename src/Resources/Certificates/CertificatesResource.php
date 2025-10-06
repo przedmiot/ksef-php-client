@@ -21,7 +21,7 @@ use N1ebieski\KSEFClient\Resources\Certificates\Enrollments\EnrollmentsResource;
 final class CertificatesResource extends AbstractResource implements CertificatesResourceInterface
 {
     public function __construct(
-        readonly private HttpClientInterface $client
+        private readonly HttpClientInterface $client
     ) {
     }
 

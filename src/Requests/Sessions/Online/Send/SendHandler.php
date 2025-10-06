@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace N1ebieski\KSEFClient\Requests\Sessions\Online\Send;
 
-use N1ebieski\KSEFClient\ValueObjects\EncryptionKey;
 use N1ebieski\KSEFClient\Actions\EncryptDocument\EncryptDocumentAction;
 use N1ebieski\KSEFClient\Actions\EncryptDocument\EncryptDocumentHandler;
 use N1ebieski\KSEFClient\Contracts\HttpClient\HttpClientInterface;
 use N1ebieski\KSEFClient\Contracts\HttpClient\ResponseInterface;
 use N1ebieski\KSEFClient\DTOs\Config;
 use N1ebieski\KSEFClient\DTOs\HttpClient\Request;
+use N1ebieski\KSEFClient\Requests\AbstractHandler;
+use N1ebieski\KSEFClient\ValueObjects\EncryptionKey;
 use N1ebieski\KSEFClient\ValueObjects\HttpClient\Method;
 use N1ebieski\KSEFClient\ValueObjects\HttpClient\Uri;
-use N1ebieski\KSEFClient\Requests\AbstractHandler;
 use RuntimeException;
 
 final readonly class SendHandler extends AbstractHandler
@@ -27,7 +27,7 @@ final readonly class SendHandler extends AbstractHandler
 
     public function handle(SendRequest | SendXmlRequest $request): ResponseInterface
     {
-        if (!$this->config->encryptionKey instanceof EncryptionKey) {
+        if ($this->config->encryptionKey instanceof EncryptionKey === false) {
             throw new RuntimeException('Encryption key is required to send invoice.');
         }
 

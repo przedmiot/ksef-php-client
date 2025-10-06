@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use function N1ebieski\KSEFClient\Tests\getClientStub;
 use N1ebieski\KSEFClient\Requests\Tokens\Create\CreateRequest;
 use N1ebieski\KSEFClient\Testing\Fixtures\Requests\Error\ErrorResponseFixture;
 use N1ebieski\KSEFClient\Testing\Fixtures\Requests\Tokens\Create\CreateRequestFixture;
-
 use N1ebieski\KSEFClient\Testing\Fixtures\Requests\Tokens\Create\CreateResponseFixture;
+
+use function N1ebieski\KSEFClient\Tests\getClientStub;
 
 /**
  * @return array<string, array{CreateRequestFixture, CreateResponseFixture}>
