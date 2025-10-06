@@ -10,6 +10,7 @@ use Http\Discovery\Psr18ClientDiscovery;
 use InvalidArgumentException;
 use N1ebieski\KSEFClient\Actions\ConvertDerToPem\ConvertDerToPemAction;
 use N1ebieski\KSEFClient\Actions\ConvertDerToPem\ConvertDerToPemHandler;
+use N1ebieski\KSEFClient\Contracts\HttpClient\ResponseInterface;
 use N1ebieski\KSEFClient\Contracts\Resources\ClientResourceInterface;
 use N1ebieski\KSEFClient\DTOs\Config;
 use N1ebieski\KSEFClient\DTOs\Requests\Auth\ContextIdentifierGroup;
@@ -240,7 +241,6 @@ final class ClientBuilder
                 $this->ksefToken instanceof KsefToken => $this->handleAuthorisationByKsefToken($client),
             };
 
-            /** @var object{referenceNumber: string, authenticationToken: object{token: string}} $authorisationAccessResponse */
             $authorisationAccessResponse = $authorisationAccessResponse->object();
 
             $client = $client->withAccessToken(AccessToken::from($authorisationAccessResponse->authenticationToken->token));
@@ -286,7 +286,7 @@ final class ClientBuilder
         );
     }
 
-    private function handleAuthorisationByCertificate(ClientResourceInterface $client): object
+    private function handleAuthorisationByCertificate(ClientResourceInterface $client): ResponseInterface
     {
         if ( ! $this->certificatePath instanceof CertificatePath) {
             throw new RuntimeException('Certificate path is not set');
@@ -307,7 +307,7 @@ final class ClientBuilder
         );
     }
 
-    private function handleAuthorisationByKsefToken(ClientResourceInterface $client): object
+    private function handleAuthorisationByKsefToken(ClientResourceInterface $client): ResponseInterface
     {
         if ( ! $this->ksefToken instanceof KsefToken) {
             throw new RuntimeException('KSEF token is not set');
