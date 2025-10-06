@@ -6,5 +6,6 @@
 /vendor
 /var
 /bin
+/docs
 .env
 .php-cs-fixer.cache
