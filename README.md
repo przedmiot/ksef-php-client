@@ -764,12 +764,14 @@ $response = $client->testdata()->person()->remove(
     </summary>
 
 ```php
+<?php
+
+use N1ebieski\KSEFClient\Actions\ConvertCertificateToPkcs12\ConvertCertificateToPkcs12Action;
+use N1ebieski\KSEFClient\Actions\ConvertCertificateToPkcs12\ConvertCertificateToPkcs12Handler;
 use N1ebieski\KSEFClient\Actions\ConvertDerToPem\ConvertDerToPemAction;
 use N1ebieski\KSEFClient\Actions\ConvertDerToPem\ConvertDerToPemHandler;
 use N1ebieski\KSEFClient\Actions\ConvertPemToDer\ConvertPemToDerAction;
 use N1ebieski\KSEFClient\Actions\ConvertPemToDer\ConvertPemToDerHandler;
-use N1ebieski\KSEFClient\Actions\ConvertCertificateToPkcs12\ConvertCertificateToPkcs12Action;
-use N1ebieski\KSEFClient\Actions\ConvertCertificateToPkcs12\ConvertCertificateToPkcs12Handler;
 use N1ebieski\KSEFClient\ClientBuilder;
 use N1ebieski\KSEFClient\DTOs\DN;
 use N1ebieski\KSEFClient\Factories\CSRFactory;
@@ -779,6 +781,7 @@ use N1ebieski\KSEFClient\ValueObjects\Mode;
 use N1ebieski\KSEFClient\ValueObjects\PrivateKeyType;
 
 $client = new ClientBuilder()
+    ->withMode(Mode::Test)
     ->withIdentifier('NIP_NUMBER')
     // To generate the KSEF certificate, you have to authorize the qualified certificate the first time
     ->withCertificatePath($_ENV['PATH_TO_CERTIFICATE'], $_ENV['CERTIFICATE_PASSPHRASE'])
@@ -843,49 +846,33 @@ file_put_contents(Utility::basePath('config/certificates/ksef-certificate.p12'),
     </summary>
 
 ```php
+<?php
+
 use Endroid\QrCode\Builder\Builder as QrCodeBuilder;
 use Endroid\QrCode\Label\Font\OpenSans;
 use Endroid\QrCode\RoundBlockSizeMode;
-use N1ebieski\KSEFClient\ClientBuilder;
-use N1ebieski\KSEFClient\Actions\ConvertDerToPem\ConvertDerToPemAction;
-use N1ebieski\KSEFClient\Actions\ConvertDerToPem\ConvertDerToPemHandler;
+use N1ebieski\KSEFClient\Actions\ConvertEcdsaDerToRaw\ConvertEcdsaDerToRawHandler;
 use N1ebieski\KSEFClient\Actions\GenerateQRCodes\GenerateQRCodesAction;
 use N1ebieski\KSEFClient\Actions\GenerateQRCodes\GenerateQRCodesHandler;
-use N1ebieski\KSEFClient\Actions\ConvertEcdsaDerToRaw\ConvertEcdsaDerToRawHandler;
-use N1ebieski\KSEFClient\Factories\EncryptedKeyFactory;
-use N1ebieski\KSEFClient\Factories\EncryptionKeyFactory;
-use N1ebieski\KSEFClient\Support\Utility;
+use N1ebieski\KSEFClient\ClientBuilder;
 use N1ebieski\KSEFClient\DTOs\QRCodes;
 use N1ebieski\KSEFClient\DTOs\Requests\Sessions\Online\Faktura;
+use N1ebieski\KSEFClient\Factories\EncryptionKeyFactory;
+use N1ebieski\KSEFClient\Support\Utility;
 use N1ebieski\KSEFClient\Testing\Fixtures\Requests\Sessions\Online\Send\SendFakturaSprzedazyTowaruRequestFixture;
-use N1ebieski\KSEFClient\ValueObjects\Requests\Security\PublicKeyCertificates\PublicKeyCertificateUsage;
-use N1ebieski\KSEFClient\ValueObjects\KsefPublicKey;
+use N1ebieski\KSEFClient\ValueObjects\Mode;
 
 $encryptionKey = EncryptionKeyFactory::makeRandom();
 
 $client = new ClientBuilder()
+    ->withMode(Mode::Test)
     ->withIdentifier('NIP_NUMBER')
     ->withCertificatePath($_ENV['PATH_TO_CERTIFICATE'], $_ENV['CERTIFICATE_PASSPHRASE'])
     ->withEncryptionKey($encryptionKey)
     ->build();
 
-$securityResponse = $client->security()->publicKeyCertificates();
-
-$symmetricKeyEncryptionCertificate = base64_decode(
-    $securityResponse->getFirstByPublicKeyCertificateUsage(PublicKeyCertificateUsage::SymmetricKeyEncryption)
-);
-
-$certificate = new ConvertDerToPemHandler()->handle(new ConvertDerToPemAction(
-    der: $symmetricKeyEncryptionCertificate,
-    name: 'CERTIFICATE'
-));
-
-$ksefPublicKey = KsefPublicKey::from($certificate);
-$encryptedKey = EncryptedKeyFactory::make($encryptionKey, $ksefPublicKey);
-
 $openResponse = $client->sessions()->online()->open([
     'formCode' => 'FA (3)',
-    'encryptedKey' => $encryptedKey
 ])->object();
 
 $fixture = new SendFakturaSprzedazyTowaruRequestFixture()
@@ -938,7 +925,7 @@ $generateQRCodesHandler = new GenerateQRCodesHandler(
 $qrCodes = $generateQRCodesHandler->handle(GenerateQRCodesAction::from([
     'nip' => $faktura->podmiot1->daneIdentyfikacyjne->nip,
     'invoiceCreatedAt' => $faktura->fa->p_1->value,
-    'document' => $faktura->toXml(),    
+    'document' => $faktura->toXml(),
     'ksefNumber' => $statusResponse->ksefNumber
 ]));
 
@@ -953,6 +940,8 @@ file_put_contents(Utility::basePath("var/qr/code1.png"), $qrCodes->code1);
     </summary>
 
 ```php
+<?php
+
 use Endroid\QrCode\Builder\Builder as QrCodeBuilder;
 use Endroid\QrCode\Label\Font\OpenSans;
 use Endroid\QrCode\RoundBlockSizeMode;
@@ -1017,41 +1006,25 @@ file_put_contents(Utility::basePath("var/qr/code2.png"), $qrCodes->code2);
     </summary>
 
 ```php
-use N1ebieski\KSEFClient\Actions\ConvertDerToPem\ConvertDerToPemAction;
-use N1ebieski\KSEFClient\Actions\ConvertDerToPem\ConvertDerToPemHandler;
+<?php
+
 use N1ebieski\KSEFClient\Actions\DecryptDocument\DecryptDocumentAction;
 use N1ebieski\KSEFClient\Actions\DecryptDocument\DecryptDocumentHandler;
 use N1ebieski\KSEFClient\ClientBuilder;
-use N1ebieski\KSEFClient\Factories\EncryptedKeyFactory;
 use N1ebieski\KSEFClient\Factories\EncryptionKeyFactory;
 use N1ebieski\KSEFClient\Support\Utility;
-use N1ebieski\KSEFClient\ValueObjects\KsefPublicKey;
 use N1ebieski\KSEFClient\ValueObjects\Mode;
-use N1ebieski\KSEFClient\ValueObjects\Requests\Security\PublicKeyCertificates\PublicKeyCertificateUsage;
 
 $encryptionKey = EncryptionKeyFactory::makeRandom();
 
 $client = new ClientBuilder()
+    ->withMode(Mode::Test)
     ->withIdentifier($_ENV['NIP_NUMBER'])
     ->withCertificatePath($_ENV['PATH_TO_CERTIFICATE'], $_ENV['CERTIFICATE_PASSPHRASE'])
+    ->withEncryptionKey($encryptionKey)
     ->build();
 
-$securityResponse = $client->security()->publicKeyCertificates();
-
-$symmetricKeyEncryptionCertificate = base64_decode(
-    $securityResponse->getFirstByPublicKeyCertificateUsage(PublicKeyCertificateUsage::SymmetricKeyEncryption)
-);
-
-$certificate = new ConvertDerToPemHandler()->handle(new ConvertDerToPemAction(
-    der: $symmetricKeyEncryptionCertificate,
-    name: 'CERTIFICATE'
-));
-
-$ksefPublicKey = KsefPublicKey::from($certificate);
-$encryptedKey = EncryptedKeyFactory::make($encryptionKey, $ksefPublicKey);
-
 $initResponse = $client->invoices()->exports()->init([
-    'encryptedKey' => $encryptedKey,
     'filters' => [
         'subjectType' => 'Subject1',
         'dateRange' => [
