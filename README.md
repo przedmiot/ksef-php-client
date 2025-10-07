@@ -19,7 +19,7 @@ Main features:
 |  KSEF Version  | Branch Version | Release Version |
 |:--------------:|:--------------:|:---------------:|
 |       2.0      |      main      |      ^0.3       |
-|       1.0      |       1.x      |      0.2.*      |
+|       1.0      |      0.2.x     |      0.2.*      |
 
 ## Table of Contents
 
