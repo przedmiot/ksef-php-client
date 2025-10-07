@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace N1ebieski\KSEFClient\DTOs;
 
+use N1ebieski\KSEFClient\Contracts\WithInterface;
 use N1ebieski\KSEFClient\Support\AbstractDTO;
 use N1ebieski\KSEFClient\ValueObjects\AccessToken;
 use N1ebieski\KSEFClient\ValueObjects\Certificate;
 use N1ebieski\KSEFClient\ValueObjects\EncryptionKey;
 use N1ebieski\KSEFClient\ValueObjects\HttpClient\BaseUri;
 use N1ebieski\KSEFClient\ValueObjects\RefreshToken;
+use N1ebieski\KSEFClient\ValueObjects\Requests\Sessions\EncryptedKey;
 use SensitiveParameter;
 
 final readonly class Config extends AbstractDTO
@@ -23,8 +25,21 @@ final readonly class Config extends AbstractDTO
         #[SensitiveParameter]
         public ?EncryptionKey $encryptionKey = null,
         #[SensitiveParameter]
-        public ?Certificate $certificate = null
+        public ?EncryptedKey $encryptedKey = null,
+        #[SensitiveParameter]
+        public ?Certificate $certificate = null,
     ) {
+    }
+
+    public function withEncryptedKey(EncryptedKey $encryptedKey): self
+    {
+        /** @var array<string, mixed> $data */
+        $data = $this->toArray();
+
+        return self::from([
+            ...$data,
+            'encryptedKey' => $encryptedKey
+        ]);
     }
 
     public function withAccessToken(AccessToken $accessToken): self
