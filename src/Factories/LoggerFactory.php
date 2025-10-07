@@ -14,7 +14,7 @@ use Psr\Log\LogLevel;
 use PsrDiscovery\Discover;
 use PsrDiscovery\Entities\CandidateEntity;
 
-final readonly class LoggerFactory extends AbstractFactory
+final class LoggerFactory extends AbstractFactory
 {
     /**
      * @param null|LogLevel::* $level

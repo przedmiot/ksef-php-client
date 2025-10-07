@@ -16,11 +16,11 @@ use N1ebieski\KSEFClient\ValueObjects\CertificateSerialNumber;
 use N1ebieski\KSEFClient\ValueObjects\PrivateKeyType;
 use RuntimeException;
 
-final readonly class GenerateQRCodesHandler extends AbstractHandler
+final class GenerateQRCodesHandler extends AbstractHandler
 {
     public function __construct(
-        private QrCodeBuilderInterface $qrCodeBuilder,
-        private ConvertEcdsaDerToRawHandler $convertEcdsaDerToRawHandler
+        private readonly QrCodeBuilderInterface $qrCodeBuilder,
+        private readonly ConvertEcdsaDerToRawHandler $convertEcdsaDerToRawHandler
     ) {
     }
 

@@ -16,7 +16,7 @@ abstract class AbstractSendRequestFixture extends AbstractRequestFixture
 
     public function withTodayDate(): self
     {
-        $todayDate = new DateTimeImmutable()->format('Y-m-d');
+        $todayDate = (new DateTimeImmutable())->format('Y-m-d');
 
         $this->data['faktura']['fa']['p_1'] = $todayDate;
 
