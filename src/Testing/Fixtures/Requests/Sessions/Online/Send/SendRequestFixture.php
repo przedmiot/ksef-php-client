@@ -16,7 +16,7 @@ class SendRequestFixture extends AbstractRequestFixture
         'referenceNumber' => '20250625-EE-319D7EE000-B67F415CDC-2C',
     ];
 
-    public function withFaktura(FakturaAbstractFixture $faktura): self
+    public function withFakturaFixture(FakturaAbstractFixture $faktura): self
     {
         $this->data['faktura'] = $faktura->data;
 

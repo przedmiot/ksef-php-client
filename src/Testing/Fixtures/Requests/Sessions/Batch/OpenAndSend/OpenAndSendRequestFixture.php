@@ -21,7 +21,7 @@ class OpenAndSendRequestFixture extends AbstractRequestFixture
     /**
      * @param array<int, FakturaAbstractFixture> $faktury
      */
-    public function withFaktury(array $faktury): self
+    public function withFakturaFixtures(array $faktury): self
     {
         $this->data['faktury'] = array_map(fn (FakturaAbstractFixture $faktura) => $faktura->data, $faktury);
 

@@ -23,15 +23,15 @@ use function N1ebieski\KSEFClient\Tests\getClientStub;
  */
 dataset('validResponseProvider', function (): array {
     $requests = [
-        (new SendRequestFixture())->withFaktura(new FakturaSprzedazyTowaruFixture())->withName('faktura sprzedaży towaru'),
-        (new SendRequestFixture())->withFaktura(new FakturaKorygujacaDaneNabywcyFixture())->withName('faktura korygująca dane nabywcy'),
-        (new SendRequestFixture())->withFaktura(new FakturaKorygujacaUniwersalnaFixture())->withName('faktura korygująca uniwersalna'),
-        (new SendRequestFixture())->withFaktura(new FakturaSprzedazyUslugLeasinguOperacyjnegoFixture())->withName('faktura sprzedaży usług leasingu operacyjnego'),
-        (new SendRequestFixture())->withFaktura(new FakturaZaliczkowaZDodatkowymNabywcaFixture())->withName('faktura zaliczkowa z dodatkowym nabywcą'),
-        (new SendRequestFixture())->withFaktura(new FakturaUproszczonaFixture())->withName('faktura uproszczona'),
-        (new SendRequestFixture())->withFaktura(new FakturaVatMarzaFixture())->withName('faktura VAT marża'),
-        (new SendRequestFixture())->withFaktura(new FakturaWWalucieObcejFixture())->withName('faktura w walucie obcej'),
-        (new SendRequestFixture())->withFaktura(new FakturaZZalacznikiemFixture())->withName('faktura z załącznikiem'),
+        (new SendRequestFixture())->withFakturaFixture(new FakturaSprzedazyTowaruFixture())->withName('faktura sprzedaży towaru'),
+        (new SendRequestFixture())->withFakturaFixture(new FakturaKorygujacaDaneNabywcyFixture())->withName('faktura korygująca dane nabywcy'),
+        (new SendRequestFixture())->withFakturaFixture(new FakturaKorygujacaUniwersalnaFixture())->withName('faktura korygująca uniwersalna'),
+        (new SendRequestFixture())->withFakturaFixture(new FakturaSprzedazyUslugLeasinguOperacyjnegoFixture())->withName('faktura sprzedaży usług leasingu operacyjnego'),
+        (new SendRequestFixture())->withFakturaFixture(new FakturaZaliczkowaZDodatkowymNabywcaFixture())->withName('faktura zaliczkowa z dodatkowym nabywcą'),
+        (new SendRequestFixture())->withFakturaFixture(new FakturaUproszczonaFixture())->withName('faktura uproszczona'),
+        (new SendRequestFixture())->withFakturaFixture(new FakturaVatMarzaFixture())->withName('faktura VAT marża'),
+        (new SendRequestFixture())->withFakturaFixture(new FakturaWWalucieObcejFixture())->withName('faktura w walucie obcej'),
+        (new SendRequestFixture())->withFakturaFixture(new FakturaZZalacznikiemFixture())->withName('faktura z załącznikiem'),
     ];
 
     $responses = [
@@ -68,7 +68,7 @@ test('invalid response', function (): void {
     expect(function () use ($responseFixture): void {
         /** @var SendRequestFixture $requestFixture */
         $requestFixture = (new SendRequestFixture())
-            ->withFaktura(new FakturaSprzedazyTowaruFixture())->withName('faktura sprzedaży towaru');
+            ->withFakturaFixture(new FakturaSprzedazyTowaruFixture())->withName('faktura sprzedaży towaru');
 
         $clientStub = getClientStub($responseFixture);
 

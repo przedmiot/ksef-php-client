@@ -26,7 +26,7 @@ use function N1ebieski\KSEFClient\Tests\getResponseStub;
  */
 dataset('validResponseProvider', function (): array {
     $requests = [
-        (new OpenAndSendRequestFixture())->withFaktury(array_map(
+        (new OpenAndSendRequestFixture())->withFakturaFixtures(array_map(
             fn () => (new FakturaSprzedazyTowaruFixture())
                 ->withTodayDate()
                 ->withRandomInvoiceNumber()
