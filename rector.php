@@ -20,9 +20,6 @@ return \Rector\Config\RectorConfig::configure()
         \Rector\CodeQuality\Rector\If_\ExplicitBoolCompareRector::class => [
             __DIR__ . '/src/Actions/ConvertEcdsaDerToRaw/ConvertEcdsaDerToRawHandler.php'
         ],
-        \Rector\Strict\Rector\If_\BooleanInIfConditionRuleFixerRector::class => [
-            __DIR__ . '/src/Actions/ConvertEcdsaDerToRaw/ConvertEcdsaDerToRawHandler.php'
-        ]
     ])
     ->withComposerBased(phpunit: true)
     ->withImportNames(removeUnusedImports: true)
@@ -34,7 +31,6 @@ return \Rector\Config\RectorConfig::configure()
         privatization: true,
         instanceOf: true,
         earlyReturn: true,
-        strictBooleans: true,
         carbon: true,
         phpunitCodeQuality: true
     )
