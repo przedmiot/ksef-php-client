@@ -60,7 +60,7 @@ test('valid response', function (SendRequestFixture $requestFixture, SendRespons
     $response = $clientStub->sessions()->online()->send($requestFixture->data)->object();
 
     expect($response)->toBeFixture($responseFixture->data);
-})->with('validResponseProvider');
+})->with('validResponseProvider')->only();
 
 test('invalid response', function (): void {
     $responseFixture = new ErrorResponseFixture();

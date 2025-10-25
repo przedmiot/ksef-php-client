@@ -8,8 +8,6 @@ use N1ebieski\KSEFClient\Actions\EncryptDocument\EncryptDocumentAction;
 use N1ebieski\KSEFClient\Actions\EncryptDocument\EncryptDocumentHandler;
 use N1ebieski\KSEFClient\Actions\SplitDocumentIntoParts\SplitDocumentIntoPartsAction;
 use N1ebieski\KSEFClient\Actions\SplitDocumentIntoParts\SplitDocumentIntoPartsHandler;
-use N1ebieski\KSEFClient\Actions\ValidateXml\ValidateXmlAction;
-use N1ebieski\KSEFClient\Actions\ValidateXml\ValidateXmlHandler;
 use N1ebieski\KSEFClient\Actions\ZipDocuments\ZipDocumentsAction;
 use N1ebieski\KSEFClient\Actions\ZipDocuments\ZipDocumentsHandler;
 use N1ebieski\KSEFClient\Contracts\ConfigInterface;
@@ -22,6 +20,8 @@ use N1ebieski\KSEFClient\Exceptions\ExceptionHandler;
 use N1ebieski\KSEFClient\Exceptions\XmlValidationException;
 use N1ebieski\KSEFClient\Requests\AbstractHandler;
 use N1ebieski\KSEFClient\Support\Utility;
+use N1ebieski\KSEFClient\Validator\Rules\Xml\SchemaRule;
+use N1ebieski\KSEFClient\Validator\Validator;
 use N1ebieski\KSEFClient\ValueObjects\EncryptionKey;
 use N1ebieski\KSEFClient\ValueObjects\HttpClient\Method;
 use N1ebieski\KSEFClient\ValueObjects\HttpClient\Uri;
@@ -36,7 +36,6 @@ final class OpenAndSendHandler extends AbstractHandler
         private readonly EncryptDocumentHandler $encryptDocument,
         private readonly ZipDocumentsHandler $zipDocuments,
         private readonly SplitDocumentIntoPartsHandler $splitDocumentIntoParts,
-        private readonly ValidateXmlHandler $validateXml,
         private readonly ExceptionHandler $exceptionHandler,
         private readonly Config $config
     ) {
@@ -63,10 +62,9 @@ final class OpenAndSendHandler extends AbstractHandler
         if (is_array($documents) && $this->config->validateXml) {
             foreach ($documents as $document) {
                 try {
-                    $this->validateXml->handle(new ValidateXmlAction(
-                        document: $document,
-                        schemaPath: SchemaPath::from(Utility::basePath('resources/xsd/faktura.xsd'))
-                    ));
+                    Validator::validate($document, [
+                        new SchemaRule(SchemaPath::from(Utility::basePath('resources/xsd/faktura.xsd')))
+                    ]);
                 } catch (XmlValidationException $exception) {
                     $this->exceptionHandler->handle($exception);
                 }

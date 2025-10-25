@@ -6,8 +6,6 @@ namespace N1ebieski\KSEFClient\Requests\Sessions\Online\Send;
 
 use N1ebieski\KSEFClient\Actions\EncryptDocument\EncryptDocumentAction;
 use N1ebieski\KSEFClient\Actions\EncryptDocument\EncryptDocumentHandler;
-use N1ebieski\KSEFClient\Actions\ValidateXml\ValidateXmlAction;
-use N1ebieski\KSEFClient\Actions\ValidateXml\ValidateXmlHandler;
 use N1ebieski\KSEFClient\Contracts\HttpClient\HttpClientInterface;
 use N1ebieski\KSEFClient\Contracts\HttpClient\ResponseInterface;
 use N1ebieski\KSEFClient\DTOs\Config;
@@ -16,6 +14,8 @@ use N1ebieski\KSEFClient\Exceptions\ExceptionHandler;
 use N1ebieski\KSEFClient\Exceptions\XmlValidationException;
 use N1ebieski\KSEFClient\Requests\AbstractHandler;
 use N1ebieski\KSEFClient\Support\Utility;
+use N1ebieski\KSEFClient\Validator\Rules\Xml\SchemaRule;
+use N1ebieski\KSEFClient\Validator\Validator;
 use N1ebieski\KSEFClient\ValueObjects\EncryptionKey;
 use N1ebieski\KSEFClient\ValueObjects\HttpClient\Method;
 use N1ebieski\KSEFClient\ValueObjects\HttpClient\Uri;
@@ -27,7 +27,6 @@ final class SendHandler extends AbstractHandler
     public function __construct(
         private readonly HttpClientInterface $client,
         private readonly EncryptDocumentHandler $encryptDocument,
-        private readonly ValidateXmlHandler $validateXml,
         private readonly ExceptionHandler $exceptionHandler,
         private readonly Config $config
     ) {
@@ -43,10 +42,9 @@ final class SendHandler extends AbstractHandler
 
         if ($this->config->validateXml) {
             try {
-                $this->validateXml->handle(new ValidateXmlAction(
-                    document: $xml,
-                    schemaPath: SchemaPath::from(Utility::basePath('resources/xsd/faktura.xsd'))
-                ));
+                Validator::validate($xml, [
+                    new SchemaRule(SchemaPath::from(Utility::basePath('resources/xsd/faktura.xsd')))
+                ]);
             } catch (XmlValidationException $exception) {
                 $this->exceptionHandler->handle($exception);
             }

@@ -6,7 +6,6 @@ namespace N1ebieski\KSEFClient\Resources\Auth;
 
 use N1ebieski\KSEFClient\Actions\ConvertEcdsaDerToRaw\ConvertEcdsaDerToRawHandler;
 use N1ebieski\KSEFClient\Actions\SignDocument\SignDocumentHandler;
-use N1ebieski\KSEFClient\Actions\ValidateXml\ValidateXmlHandler;
 use N1ebieski\KSEFClient\Contracts\HttpClient\HttpClientInterface;
 use N1ebieski\KSEFClient\Contracts\HttpClient\ResponseInterface;
 use N1ebieski\KSEFClient\Contracts\Resources\Auth\AuthResourceInterface;
@@ -50,7 +49,6 @@ final class AuthResource extends AbstractResource implements AuthResourceInterfa
         return (new XadesSignatureHandler(
             client: $this->client,
             signDocument: new SignDocumentHandler(new ConvertEcdsaDerToRawHandler()),
-            validateXml: new ValidateXmlHandler(),
             exceptionHandler: new ExceptionHandler($this->logger),
             config: $this->config
         ))->handle($request);
