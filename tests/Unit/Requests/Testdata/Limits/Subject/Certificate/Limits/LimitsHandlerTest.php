@@ -2,12 +2,15 @@
 
 declare(strict_types=1);
 
+use function N1ebieski\KSEFClient\Tests\createClientStub;
 use N1ebieski\KSEFClient\Requests\Testdata\Limits\Subject\Certificate\Limits\LimitsRequest;
 use N1ebieski\KSEFClient\Testing\Fixtures\Requests\Error\ErrorResponseFixture;
 use N1ebieski\KSEFClient\Testing\Fixtures\Requests\Testdata\Limits\Subject\Certificate\Limits\LimitsRequestFixture;
 use N1ebieski\KSEFClient\Testing\Fixtures\Requests\Testdata\Limits\Subject\Certificate\Limits\LimitsResponseFixture;
 
-use function N1ebieski\KSEFClient\Tests\getClientStub;
+use N1ebieski\KSEFClient\Tests\Unit\AbstractTestCase;
+
+/** @var AbstractTestCase $this */
 
 /**
  * @return array<string, array{LimitsRequestFixture, LimitsResponseFixture}>
@@ -34,7 +37,8 @@ dataset('validResponseProvider', function (): array {
 });
 
 test('valid response', function (LimitsRequestFixture $requestFixture, LimitsResponseFixture $responseFixture): void {
-    $clientStub = getClientStub($responseFixture);
+    /** @var AbstractTestCase $this */
+    $clientStub = $this->createClientStub($responseFixture);
 
     $request = LimitsRequest::from($requestFixture->data);
 
@@ -49,9 +53,10 @@ test('invalid response', function (): void {
     $responseFixture = new ErrorResponseFixture();
 
     expect(function () use ($responseFixture): void {
+        /** @var AbstractTestCase $this */
         $requestFixture = new LimitsRequestFixture();
 
-        $clientStub = getClientStub($responseFixture);
+        $clientStub = $this->createClientStub($responseFixture);
 
         $clientStub->testdata()->limits()->subject()->certificate()->limits($requestFixture->data);
     })->toBeExceptionFixture($responseFixture->data);

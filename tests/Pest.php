@@ -4,25 +4,12 @@ namespace N1ebieski\KSEFClient\Tests;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use Mockery;
-use Mockery\MockInterface;
 use N1ebieski\KSEFClient\ClientBuilder;
-use N1ebieski\KSEFClient\Contracts\HttpClient\HttpClientInterface;
-use N1ebieski\KSEFClient\Contracts\Resources\ClientResourceInterface;
 use N1ebieski\KSEFClient\Contracts\ValueAwareInterface;
-use N1ebieski\KSEFClient\DTOs\Config;
-use N1ebieski\KSEFClient\Exceptions\ExceptionHandler;
 use N1ebieski\KSEFClient\Exceptions\HttpClient\BadRequestException;
-use N1ebieski\KSEFClient\Factories\EncryptionKeyFactory;
-use N1ebieski\KSEFClient\HttpClient\Response;
-use N1ebieski\KSEFClient\Resources\ClientResource;
-use N1ebieski\KSEFClient\Testing\Fixtures\Requests\AbstractResponseFixture;
 use N1ebieski\KSEFClient\Tests\Feature\AbstractTestCase as FeatureAbstractTestCase;
 use N1ebieski\KSEFClient\Tests\Unit\AbstractTestCase as UnitAbstractTestCase;
-use N1ebieski\KSEFClient\ValueObjects\HttpClient\BaseUri;
 use N1ebieski\KSEFClient\ValueObjects\Mode;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\StreamInterface;
 
 /*
 |--------------------------------------------------------------------------
@@ -154,51 +141,4 @@ function toBeFixture(array $data, ?object $object = null): void
 
         expect($actual)->toEqual($expected);
     }
-}
-
-function getResponseStub(AbstractResponseFixture $responseFixture): MockInterface & ResponseInterface
-{
-    $streamStub = Mockery::mock(StreamInterface::class);
-    $streamStub->shouldReceive('getContents')->andReturn($responseFixture->toContents());
-
-    $responseStub = Mockery::mock(ResponseInterface::class);
-    $responseStub->shouldReceive('getStatusCode')->andReturn($responseFixture->statusCode);
-    $responseStub->shouldReceive('getBody')->andReturn($streamStub);
-
-    /** @var MockInterface&ResponseInterface */
-    return $responseStub;
-}
-
-function getHttpClientStub(AbstractResponseFixture $responseFixture): MockInterface & HttpClientInterface
-{
-    $httpClientStub = Mockery::mock(HttpClientInterface::class);
-    $httpClientStub->shouldReceive('withAccessToken')->andReturnSelf();
-    $httpClientStub->shouldReceive('withoutAccessToken')->andReturnSelf();
-    $httpClientStub->shouldReceive('withEncryptedKey')->andReturnSelf();
-
-    /** @var MockInterface&ResponseInterface $responseStub */
-    $responseStub = getResponseStub($responseFixture);
-
-    $response = new Response($responseStub);
-    $response->throwExceptionIfError();
-
-    $httpClientStub->shouldReceive('sendRequest')->andReturn($response);
-
-    /** @var MockInterface&HttpClientInterface */
-    return $httpClientStub;
-}
-
-function getClientStub(AbstractResponseFixture $responseFixture): ClientResourceInterface
-{
-    /** @var MockInterface&HttpClientInterface $httpClientStub */
-    $httpClientStub = getHttpClientStub($responseFixture);
-
-    return new ClientResource(
-        client: $httpClientStub,
-        config: new Config(
-            baseUri: new BaseUri(Mode::Test->getApiUrl()->value),
-            encryptionKey: EncryptionKeyFactory::makeRandom()
-        ),
-        exceptionHandler: new ExceptionHandler(),
-    );
 }

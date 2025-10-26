@@ -2,12 +2,15 @@
 
 declare(strict_types=1);
 
+use function N1ebieski\KSEFClient\Tests\createClientStub;
 use N1ebieski\KSEFClient\Requests\Auth\KsefToken\KsefTokenRequest;
 use N1ebieski\KSEFClient\Testing\Fixtures\Requests\Auth\KsefToken\KsefTokenRequestFixture;
 use N1ebieski\KSEFClient\Testing\Fixtures\Requests\Auth\KsefToken\KsefTokenResponseFixture;
 use N1ebieski\KSEFClient\Testing\Fixtures\Requests\Error\ErrorResponseFixture;
 
-use function N1ebieski\KSEFClient\Tests\getClientStub;
+use N1ebieski\KSEFClient\Tests\Unit\AbstractTestCase;
+
+/** @var AbstractTestCase $this */
 
 /**
  * @return array<string, array{KsefTokenRequestFixture, KsefTokenResponseFixture}>
@@ -34,7 +37,8 @@ dataset('validResponseProvider', function (): array {
 });
 
 test('valid response', function (KsefTokenRequestFixture $requestFixture, KsefTokenResponseFixture $responseFixture): void {
-    $clientStub = getClientStub($responseFixture);
+    /** @var AbstractTestCase $this */
+    $clientStub = $this->createClientStub($responseFixture);
 
     $request = KsefTokenRequest::from($requestFixture->data);
 
@@ -49,9 +53,10 @@ test('invalid response', function (): void {
     $responseFixture = new ErrorResponseFixture();
 
     expect(function () use ($responseFixture): void {
+        /** @var AbstractTestCase $this */
         $requestFixture = new KsefTokenRequestFixture();
 
-        $clientStub = getClientStub($responseFixture);
+        $clientStub = $this->createClientStub($responseFixture);
 
         $clientStub->auth()->ksefToken($requestFixture->data);
     })->toBeExceptionFixture($responseFixture->data);

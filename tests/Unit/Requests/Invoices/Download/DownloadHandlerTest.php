@@ -2,12 +2,15 @@
 
 declare(strict_types=1);
 
+use function N1ebieski\KSEFClient\Tests\createClientStub;
 use N1ebieski\KSEFClient\Requests\Invoices\Download\DownloadRequest;
 use N1ebieski\KSEFClient\Testing\Fixtures\Requests\Error\ErrorResponseFixture;
 use N1ebieski\KSEFClient\Testing\Fixtures\Requests\Invoices\Download\DownloadRequestFixture;
 use N1ebieski\KSEFClient\Testing\Fixtures\Requests\Invoices\Download\DownloadResponseFixture;
 
-use function N1ebieski\KSEFClient\Tests\getClientStub;
+use N1ebieski\KSEFClient\Tests\Unit\AbstractTestCase;
+
+/** @var AbstractTestCase $this */
 
 /**
  * @return array<string, array{DownloadRequestFixture, DownloadResponseFixture}>
@@ -34,7 +37,8 @@ dataset('validResponseProvider', function (): array {
 });
 
 test('valid response', function (DownloadRequestFixture $requestFixture, DownloadResponseFixture $responseFixture): void {
-    $clientStub = getClientStub($responseFixture);
+    /** @var AbstractTestCase $this */
+    $clientStub = $this->createClientStub($responseFixture);
 
     $request = DownloadRequest::from($requestFixture->data);
 
@@ -49,9 +53,10 @@ test('invalid response', function (): void {
     $responseFixture = new ErrorResponseFixture();
 
     expect(function () use ($responseFixture): void {
+        /** @var AbstractTestCase $this */
         $requestFixture = new DownloadRequestFixture();
 
-        $clientStub = getClientStub($responseFixture);
+        $clientStub = $this->createClientStub($responseFixture);
 
         $clientStub->invoices()->download($requestFixture->data);
     })->toBeExceptionFixture($responseFixture->data);

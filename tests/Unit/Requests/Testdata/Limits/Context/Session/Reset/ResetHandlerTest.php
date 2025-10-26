@@ -2,10 +2,13 @@
 
 declare(strict_types=1);
 
+use function N1ebieski\KSEFClient\Tests\createClientStub;
 use N1ebieski\KSEFClient\Testing\Fixtures\Requests\Error\ErrorResponseFixture;
 use N1ebieski\KSEFClient\Testing\Fixtures\Requests\Testdata\Limits\Context\Session\Reset\ResetResponseFixture;
 
-use function N1ebieski\KSEFClient\Tests\getClientStub;
+use N1ebieski\KSEFClient\Tests\Unit\AbstractTestCase;
+
+/** @var AbstractTestCase $this */
 
 /**
  * @return array<string, array{ResetResponseFixture}>
@@ -26,7 +29,8 @@ dataset('validResponseProvider', function (): array {
 });
 
 test('valid response', function (ResetResponseFixture $responseFixture): void {
-    $clientStub = getClientStub($responseFixture);
+    /** @var AbstractTestCase $this */
+    $clientStub = $this->createClientStub($responseFixture);
 
     $response = $clientStub->testdata()->limits()->context()->session()->reset()->status();
 
@@ -37,7 +41,8 @@ test('invalid response', function (): void {
     $responseFixture = new ErrorResponseFixture();
 
     expect(function () use ($responseFixture): void {
-        $clientStub = getClientStub($responseFixture);
+        /** @var AbstractTestCase $this */
+        $clientStub = $this->createClientStub($responseFixture);
 
         $clientStub->testdata()->limits()->context()->session()->reset();
     })->toBeExceptionFixture($responseFixture->data);
