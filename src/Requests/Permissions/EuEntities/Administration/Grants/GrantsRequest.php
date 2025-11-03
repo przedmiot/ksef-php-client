@@ -1,0 +1,41 @@
+<?php
+
+declare(strict_types=1);
+
+namespace N1ebieski\KSEFClient\Requests\Permissions\EuEntities\Administration\Grants;
+
+use N1ebieski\KSEFClient\Contracts\BodyInterface;
+use N1ebieski\KSEFClient\DTOs\Requests\Permissions\ContextIdentifierNipVatUeGroup;
+use N1ebieski\KSEFClient\DTOs\Requests\Permissions\SubjectIdentifierFingerprintGroup;
+use N1ebieski\KSEFClient\Requests\AbstractRequest;
+use N1ebieski\KSEFClient\ValueObjects\Requests\EuEntityName;
+
+final class GrantsRequest extends AbstractRequest implements BodyInterface
+{
+    public function __construct(
+        public readonly SubjectIdentifierFingerprintGroup $subjectIdentifierGroup,
+        public readonly ContextIdentifierNipVatUeGroup $contextIdentifierGroup,
+        public readonly string $description,
+        public readonly EuEntityName $euEntityName
+    ) {
+    }
+
+    public function toBody(): array
+    {
+        /** @var array<string, mixed> $data */
+        $data = $this->toArray();
+
+        return [
+            ...$data,
+            'euEntityName' => (string) $this->euEntityName,
+            'subjectIdentifier' => [
+                'type' => $this->subjectIdentifierGroup->getIdentifier()->getType(),
+                'value' => (string) $this->subjectIdentifierGroup->getIdentifier(),
+            ],
+            'contextIdentifier' => [
+                'type' => $this->contextIdentifierGroup->getIdentifier()->getType(),
+                'value' => (string) $this->contextIdentifierGroup->getIdentifier(),
+            ],
+        ];
+    }
+}

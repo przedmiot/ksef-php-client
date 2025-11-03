@@ -19,7 +19,7 @@ interface PermissionsResourceInterface
 
     public function authorizations(): AuthorizationsResourceInterface;
 
-    public function idirect(): IndirectResourceInterface;
+    public function indirect(): IndirectResourceInterface;
 
     public function subunits(): SubunitsResourceInterface;
 
