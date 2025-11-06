@@ -54,6 +54,7 @@ test('send invoice as NIP_2 when NIP_2 gave InvoiceWrite permission', function (
         certificatePassphrase: $_ENV['CERTIFICATE_PASSPHRASE_2']
     );
 
+    /** @var object{referenceNumber: string} $grantsResponse */
     $grantsResponse = $clientNip2->permissions()->entities()->grants([
         'subjectIdentifierGroup' => [
             'nip' => $_ENV['NIP_1']
@@ -67,6 +68,7 @@ test('send invoice as NIP_2 when NIP_2 gave InvoiceWrite permission', function (
     ])->object();
 
     Utility::retry(function (int $attempts) use ($clientNip2, $grantsResponse) {
+        /** @var object{status: object{code: int}, referenceNumber: string} $statusResponse */
         $statusResponse = $clientNip2->permissions()->operations()->status([
             'referenceNumber' => $grantsResponse->referenceNumber,
         ])->object();
@@ -89,6 +91,7 @@ test('send invoice as NIP_2 when NIP_2 gave InvoiceWrite permission', function (
         encryptionKey: $encryptionKey
     );
 
+    /** @var object{referenceNumber: string} $openResponse */
     $openResponse = $clientNip1->sessions()->online()->open([
         'formCode' => 'FA (3)',
     ])->object();
@@ -100,6 +103,7 @@ test('send invoice as NIP_2 when NIP_2 gave InvoiceWrite permission', function (
 
     $fixture = (new SendRequestFixture())->withFakturaFixture($fakturaFixture);
 
+    /** @var object{referenceNumber: string} $sendResponse */
     $sendResponse = $clientNip1->sessions()->online()->send([
         ...$fixture->data,
         'referenceNumber' => $openResponse->referenceNumber,
@@ -110,6 +114,7 @@ test('send invoice as NIP_2 when NIP_2 gave InvoiceWrite permission', function (
     ]);
 
     Utility::retry(function (int $attempts) use ($clientNip1, $openResponse, $sendResponse) {
+        /** @var object{status: object{code: int}, referenceNumber: string} $statusResponse */
         $statusResponse = $clientNip1->sessions()->invoices()->status([
             'referenceNumber' => $openResponse->referenceNumber,
             'invoiceReferenceNumber' => $sendResponse->referenceNumber
@@ -126,6 +131,7 @@ test('send invoice as NIP_2 when NIP_2 gave InvoiceWrite permission', function (
         }
     });
 
+    /** @var object{permissions: array<int, object{id: string}>} $queryResponse */
     $queryResponse = $clientNip1->permissions()->query()->personal()->grants([
         'contextIdentifierGroup' => [
             'nip' => $_ENV['NIP_2']
@@ -140,11 +146,13 @@ test('send invoice as NIP_2 when NIP_2 gave InvoiceWrite permission', function (
 
     expect($queryResponse->permissions[0]->id)->toBeString();
 
+    /** @var object{referenceNumber: string} $revokePermissionResponse */
     $revokePermissionResponse = $clientNip2->permissions()->common()->revoke([
         'permissionId' => $queryResponse->permissions[0]->id
     ])->object();
 
     Utility::retry(function (int $attempts) use ($clientNip2, $revokePermissionResponse) {
+        /** @var object{status: object{code: int}, referenceNumber: string} $statusResponse */
         $statusResponse = $clientNip2->permissions()->operations()->status([
             'referenceNumber' => $revokePermissionResponse->referenceNumber,
         ])->object();
@@ -174,6 +182,7 @@ test('send invoice as NIP_3 when NIP_3 gave canDelegate InvoiceWrite permission'
         certificatePassphrase: $_ENV['CERTIFICATE_PASSPHRASE_3']
     );
 
+    /** @var object{referenceNumber: string} $grantsResponse */
     $grantsResponse = $clientNip3->permissions()->entities()->grants([
         'subjectIdentifierGroup' => [
             'nip' => $_ENV['NIP_2']
@@ -188,6 +197,7 @@ test('send invoice as NIP_3 when NIP_3 gave canDelegate InvoiceWrite permission'
     ])->object();
 
     Utility::retry(function (int $attempts) use ($clientNip3, $grantsResponse) {
+        /** @var object{status: object{code: int}, referenceNumber: string} $statusResponse */
         $statusResponse = $clientNip3->permissions()->operations()->status([
             'referenceNumber' => $grantsResponse->referenceNumber,
         ])->object();
@@ -209,6 +219,7 @@ test('send invoice as NIP_3 when NIP_3 gave canDelegate InvoiceWrite permission'
         certificatePassphrase: $_ENV['CERTIFICATE_PASSPHRASE_2']
     );
 
+    /** @var object{referenceNumber: string} $grantsResponse */
     $grantsResponse = $clientNip2->permissions()->indirect()->grants([
         'subjectIdentifierGroup' => [
             'nip' => $_ENV['NIP_1']
@@ -223,6 +234,7 @@ test('send invoice as NIP_3 when NIP_3 gave canDelegate InvoiceWrite permission'
     ])->object();
 
     Utility::retry(function (int $attempts) use ($clientNip2, $grantsResponse) {
+        /** @var object{status: object{code: int}, referenceNumber: string} $statusResponse */
         $statusResponse = $clientNip2->permissions()->operations()->status([
             'referenceNumber' => $grantsResponse->referenceNumber,
         ])->object();
@@ -245,6 +257,7 @@ test('send invoice as NIP_3 when NIP_3 gave canDelegate InvoiceWrite permission'
         encryptionKey: $encryptionKey
     );
 
+    /** @var object{referenceNumber: string} $openResponse */
     $openResponse = $clientNip1->sessions()->online()->open([
         'formCode' => 'FA (3)',
     ])->object();
@@ -256,6 +269,7 @@ test('send invoice as NIP_3 when NIP_3 gave canDelegate InvoiceWrite permission'
 
     $fixture = (new SendRequestFixture())->withFakturaFixture($fakturaFixture);
 
+    /** @var object{referenceNumber: string} $sendResponse */
     $sendResponse = $clientNip1->sessions()->online()->send([
         ...$fixture->data,
         'referenceNumber' => $openResponse->referenceNumber,
@@ -266,6 +280,7 @@ test('send invoice as NIP_3 when NIP_3 gave canDelegate InvoiceWrite permission'
     ]);
 
     Utility::retry(function (int $attempts) use ($clientNip1, $openResponse, $sendResponse) {
+        /** @var object{status: object{code: int}, referenceNumber: string} $statusResponse */
         $statusResponse = $clientNip1->sessions()->invoices()->status([
             'referenceNumber' => $openResponse->referenceNumber,
             'invoiceReferenceNumber' => $sendResponse->referenceNumber
@@ -282,17 +297,20 @@ test('send invoice as NIP_3 when NIP_3 gave canDelegate InvoiceWrite permission'
         }
     });
 
+    /** @var object{permissions: array<int, object{id: string}>} $queryResponse */
     $queryResponse = $clientNip1->permissions()->query()->personal()->grants([
         'targetIdentifierGroup' => [
             'nip' => $_ENV['NIP_3']
         ],
     ])->object();
 
+    /** @var object{referenceNumber: string} $revokePermissionResponse */
     $revokePermissionResponse = $clientNip2->permissions()->common()->revoke([
         'permissionId' => $queryResponse->permissions[0]->id
     ])->object();
 
     Utility::retry(function (int $attempts) use ($clientNip2, $revokePermissionResponse) {
+        /** @var object{status: object{code: int}, referenceNumber: string} $statusResponse */
         $statusResponse = $clientNip2->permissions()->operations()->status([
             'referenceNumber' => $revokePermissionResponse->referenceNumber,
         ])->object();
@@ -311,4 +329,4 @@ test('send invoice as NIP_3 when NIP_3 gave canDelegate InvoiceWrite permission'
     $this->revokeCurrentSession($clientNip1);
     $this->revokeCurrentSession($clientNip2);
     $this->revokeCurrentSession($clientNip3);
-})->only();
+});

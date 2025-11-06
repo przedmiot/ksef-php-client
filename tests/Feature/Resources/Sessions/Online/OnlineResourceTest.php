@@ -27,6 +27,7 @@ test('send an invoice, check for UPO and generate QR code', function (): void {
 
     $client = $this->createClient(encryptionKey: $encryptionKey);
 
+    /** @var object{referenceNumber: string} $openResponse */
     $openResponse = $client->sessions()->online()->open([
         'formCode' => 'FA (3)',
     ])->object();
@@ -38,6 +39,7 @@ test('send an invoice, check for UPO and generate QR code', function (): void {
 
     $fixture = (new SendRequestFixture())->withFakturaFixture($fakturaFixture);
 
+    /** @var object{referenceNumber: string} $sendResponse */
     $sendResponse = $client->sessions()->online()->send([
         ...$fixture->data,
         'referenceNumber' => $openResponse->referenceNumber,
@@ -47,7 +49,9 @@ test('send an invoice, check for UPO and generate QR code', function (): void {
         'referenceNumber' => $openResponse->referenceNumber
     ]);
 
+    /** @var object{status: object{code: int}, referenceNumber: string, upoDownloadUrl: string, ksefNumber: string} $statusResponse */
     $statusResponse = Utility::retry(function (int $attempts) use ($client, $openResponse, $sendResponse) {
+        /** @var object{status: object{code: int}, referenceNumber: string, upoDownloadUrl: string} $statusResponse */
         $statusResponse = $client->sessions()->invoices()->status([
             'referenceNumber' => $openResponse->referenceNumber,
             'invoiceReferenceNumber' => $sendResponse->referenceNumber
@@ -66,6 +70,9 @@ test('send an invoice, check for UPO and generate QR code', function (): void {
 
     expect($statusResponse)->toHaveProperty('upoDownloadUrl');
     expect($statusResponse->upoDownloadUrl)->toBeString();
+
+    expect($statusResponse)->toHaveProperty('ksefNumber');
+    expect($statusResponse->ksefNumber)->toBeString();
 
     $faktura = Faktura::from($fakturaFixture->data);
 
