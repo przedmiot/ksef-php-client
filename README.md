@@ -122,7 +122,7 @@ Main features:
 
 - [Examples](#examples)
     - [Integration with a frontend application using certificate-based authentication](#integration-with-a-frontend-application-using-certificate-based-authentication)
-    - [Conversion of the KSEF certificate and private key to a .p12 file](#conversion-of-the-ksef-certificate-and-private-key-to-a-p12-file)
+    - [Conversion of the KSEF certificate and private key from MCU to a .p12 file](#conversion-of-the-ksef-certificate-and-private-key-from-mcu-to-a-p12-file)
     - [Generate a KSEF certificate and convert to .p12 file](#generate-a-ksef-certificate-and-convert-to-a-p12-file)
     - [Send an invoice, check for UPO and generate QR code](#send-an-invoice-check-for-upo-and-generate-qr-code)
     - [Batch async send multiple invoices and check for UPO](#batch-async-send-multiple-invoices-and-check-for-upo)
@@ -1224,7 +1224,7 @@ https://github.com/N1ebieski/ksef-app-example.test
 
 <details>
     <summary>
-        <h3>Conversion of the KSEF certificate and private key to a .p12 file</h3>
+        <h3>Conversion of the KSEF certificate and private key from MCU to a .p12 file</h3>
     </summary>
 
 ```php
