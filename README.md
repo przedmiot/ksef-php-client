@@ -122,7 +122,8 @@ Main features:
 
 - [Examples](#examples)
     - [Integration with a frontend application using certificate-based authentication](#integration-with-a-frontend-application-using-certificate-based-authentication)
-    - [Generate a KSEF certificate and convert to .p12 file](#generate-a-ksef-certificate-and-convert-to-p12-file)
+    - [Conversion of the KSEF certificate and private key to a .p12 file](#conversion-of-the-ksef-certificate-and-private-key-to-a-p12-file)
+    - [Generate a KSEF certificate and convert to .p12 file](#generate-a-ksef-certificate-and-convert-to-a-p12-file)
     - [Send an invoice, check for UPO and generate QR code](#send-an-invoice-check-for-upo-and-generate-qr-code)
     - [Batch async send multiple invoices and check for UPO](#batch-async-send-multiple-invoices-and-check-for-upo)
     - [Create an offline invoice and generate both QR codes](#create-an-offline-invoice-and-generate-both-qr-codes)
@@ -1223,7 +1224,36 @@ https://github.com/N1ebieski/ksef-app-example.test
 
 <details>
     <summary>
-        <h3>Generate a KSEF certificate and convert to .p12 file</h3>
+        <h3>Conversion of the KSEF certificate and private key to a .p12 file</h3>
+    </summary>
+
+```php
+use N1ebieski\KSEFClient\Actions\ConvertCertificateToPkcs12\ConvertCertificateToPkcs12Action;
+use N1ebieski\KSEFClient\Actions\ConvertCertificateToPkcs12\ConvertCertificateToPkcs12Handler;
+use N1ebieski\KSEFClient\Support\Utility;
+use N1ebieski\KSEFClient\ValueObjects\Certificate;
+
+$certificate = file_get_contents(Utility::basePath('config/certificates/certificate.crt'));
+
+$privateKey = openssl_pkey_get_private(
+    file_get_contents(Utility::basePath('config/certificates/privateKey.key')),
+    'password'
+);
+
+$certificateToPkcs12 = (new ConvertCertificateToPkcs12Handler())->handle(
+    new ConvertCertificateToPkcs12Action(
+        certificate: new Certificate($certificate, [], $privateKey),
+        passphrase: 'password'
+    )
+);
+
+file_put_contents(Utility::basePath('config/certificates/ksef-certificate.p12'), $certificateToPkcs12);
+```
+</details>
+
+<details>
+    <summary>
+        <h3>Generate a KSEF certificate and convert to a .p12 file</h3>
     </summary>
 
 ```php
