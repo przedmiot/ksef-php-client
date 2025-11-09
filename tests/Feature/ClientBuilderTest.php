@@ -8,11 +8,11 @@ use N1ebieski\KSEFClient\Actions\ConvertPemToDer\ConvertPemToDerAction;
 use N1ebieski\KSEFClient\Actions\ConvertPemToDer\ConvertPemToDerHandler;
 use N1ebieski\KSEFClient\ClientBuilder;
 use N1ebieski\KSEFClient\DTOs\DN;
+use N1ebieski\KSEFClient\Factories\CertificateFactory;
 use N1ebieski\KSEFClient\Factories\CSRFactory;
 use N1ebieski\KSEFClient\Support\Utility;
 use N1ebieski\KSEFClient\Tests\Feature\AbstractTestCase;
 use N1ebieski\KSEFClient\ValueObjects\AccessToken;
-use N1ebieski\KSEFClient\ValueObjects\Certificate;
 use N1ebieski\KSEFClient\ValueObjects\Mode;
 use N1ebieski\KSEFClient\ValueObjects\PrivateKeyType;
 use N1ebieski\KSEFClient\ValueObjects\RefreshToken;
@@ -27,7 +27,7 @@ dataset('privateKeyTypeProvider', fn (): array => [
     'EC' => [PrivateKeyType::EC],
 ]);
 
-test('auto authorization via certificate .p12', function (): void {
+test('auto authorization via certificate path .p12', function (): void {
     /** @var AbstractTestCase $this */
     $client = $this->createClient();
 
@@ -43,7 +43,7 @@ test('auto authorization via certificate .p12', function (): void {
     $this->revokeCurrentSession($client);
 });
 
-test('auto authorization via KSEF certificate .p12', function (PrivateKeyType $privateKeyType): void {
+test('auto authorization via KSEF certificate path .p12', function (PrivateKeyType $privateKeyType): void {
     /**
      * @var AbstractTestCase $this
      * @var array<string, string> $_ENV
@@ -96,7 +96,7 @@ test('auto authorization via KSEF certificate .p12', function (PrivateKeyType $p
 
     $certificateToPkcs12 = (new ConvertCertificateToPkcs12Handler())->handle(
         new ConvertCertificateToPkcs12Action(
-            certificate: new Certificate($certificateToPem, [], $csr->privateKey), //@phpstan-ignore-line
+            certificate: CertificateFactory::makeFromPkcs8($certificateToPem, $csr->privateKey),
             passphrase: $_ENV['KSEF_AUTH_CERTIFICATE_PASSPHRASE_1']
         )
     );
@@ -128,6 +128,31 @@ test('auto authorization via KSEF certificate .p12', function (PrivateKeyType $p
 
     $this->revokeCurrentSession($client);
 })->with('privateKeyTypeProvider');
+
+test('auto authorization via certificate .p12', function (): void {
+    /** @var array<string, string> $_ENV */
+    /** @var string $pkcs12 */
+    $pkcs12 = file_get_contents(Utility::basePath($_ENV['CERTIFICATE_PATH_1']));
+
+    $certificate = CertificateFactory::makeFromPkcs12($pkcs12, $_ENV['CERTIFICATE_PASSPHRASE_1']);
+
+    $client = (new ClientBuilder())
+        ->withMode(Mode::Test)
+        ->withIdentifier($_ENV['NIP_1'])
+        ->withCertificate($certificate)
+        ->build();
+
+    $accessToken = $client->getAccessToken();
+    $refreshToken = $client->getRefreshToken();
+
+    expect($accessToken)->toBeInstanceOf(AccessToken::class);
+    expect($accessToken?->validUntil)->toBeGreaterThan(new DateTimeImmutable());
+
+    expect($refreshToken)->toBeInstanceOf(RefreshToken::class);
+    expect($refreshToken?->validUntil)->toBeGreaterThan(new DateTimeImmutable('+6 days'));
+
+    $this->revokeCurrentSession($client);
+});
 
 test('auto authorization via KSEF Token', function (): void {
     /**
