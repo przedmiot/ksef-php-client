@@ -164,7 +164,8 @@ $client = (new ClientBuilder())
     ->withAccessToken($_ENV['ACCESS_TOKEN'], $_ENV['VALID_UNTIL']) // Optional, if present, auto authorization is skipped
     ->withRefreshToken($_ENV['REFRESH_TOKEN'], $_ENV['VALID_UNTIL']) // Optional, if present, auto refresh access token is enabled
     ->withKsefToken($_ENV['KSEF_TOKEN']) // Required for API Token authorization. Optional otherwise
-    ->withCertificatePath($_ENV['PATH_TO_CERTIFICATE'], $_ENV['CERTIFICATE_PASSPHRASE']) // Required .p12 file for Certificate authorization. Optional otherwise
+    ->withCertificate($_ENV['CERTIFICATE'], $_ENV['CERTIFICATE_PASSPHRASE']) // Required .p12 contents for Certificate authorization. Optional otherwise
+    ->withCertificatePath($_ENV['PATH_TO_CERTIFICATE'], $_ENV['CERTIFICATE_PASSPHRASE']) // Required path to .p12 file for Certificate authorization. Optional otherwise
     ->withVerifyCertificateChain(true) // Optional. Explanation https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Uzyskiwanie-dostepu/paths/~1api~1v2~1auth~1xades-signature/post
     ->withEncryptionKey(EncryptionKeyFactory::makeRandom()) // Required for invoice resources. Remember to save this value!
     ->withIdentifier('NIP_NUMBER') // Required for authorization. Optional otherwise
@@ -223,6 +224,19 @@ use N1ebieski\KSEFClient\ClientBuilder;
 
 $client = (new ClientBuilder())
     ->withCertificatePath($_ENV['PATH_TO_CERTIFICATE'], $_ENV['CERTIFICATE_PASSPHRASE'])
+    ->withIdentifier('NIP_NUMBER')
+    ->build();
+
+// Do something with the available resources
+```
+
+or:
+
+```php
+use N1ebieski\KSEFClient\ClientBuilder;
+
+$client = (new ClientBuilder())
+    ->withCertificate($_ENV['CERTIFICATE'], $_ENV['CERTIFICATE_PASSPHRASE'])
     ->withIdentifier('NIP_NUMBER')
     ->build();
 
@@ -1239,7 +1253,7 @@ $privateKey = file_get_contents(Utility::basePath('config/certificates/privateKe
 
 $certificateToPkcs12 = (new ConvertCertificateToPkcs12Handler())->handle(
     new ConvertCertificateToPkcs12Action(
-        certificate: CertificateFactory::makeFromString($certificate, $privateKey, 'password'),
+        certificate: CertificateFactory::makeFromPkcs8($certificate, $privateKey, 'password'),
         passphrase: 'password'
     )
 );
@@ -1321,7 +1335,7 @@ $certificateToPem = (new ConvertDerToPemHandler())->handle(
 
 $certificateToPkcs12 = (new ConvertCertificateToPkcs12Handler())->handle(
     new ConvertCertificateToPkcs12Action(
-        certificate: CertificateFactory::makeFromString($certificateToPem, $csr->privateKey),
+        certificate: CertificateFactory::makeFromPkcs8($certificateToPem, $csr->privateKey),
         passphrase: 'password'
     )
 );
@@ -1533,7 +1547,7 @@ $nip = 'NIP_NUMBER';
 // From https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Certyfikaty/paths/~1api~1v2~1certificates~1query/post
 $certificateSerialNumber = CertificateSerialNumber::from($_ENV['CERTIFICATE_SERIAL_NUMBER']);
 // Remember: this certificate must be "Offline" type, not "Authentication"
-$certificate = CertificateFactory::make(
+$certificate = CertificateFactory::makeFromCertificatePath(
     CertificatePath::from($_ENV['PATH_TO_CERTIFICATE'], $_ENV['CERTIFICATE_PASSPHRASE'])
 );
 

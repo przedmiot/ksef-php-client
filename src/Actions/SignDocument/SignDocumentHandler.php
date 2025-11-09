@@ -186,7 +186,6 @@ final class SignDocumentHandler extends AbstractHandler
             throw new RuntimeException('Unable to sign document');
         }
 
-        // If private key type is EC, convert DER to raw. Don't ask me why, but it works
         if ($action->certificate->getPrivateKeyType()->isEquals(PrivateKeyType::EC)) {
             $actualDigest = $this->convertEcdsaDerToRawHandler->handle(
                 new ConvertEcdsaDerToRawAction($actualDigest, 32) //@phpstan-ignore-line
