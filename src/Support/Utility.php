@@ -12,9 +12,12 @@ final class Utility
     public static function retry(Closure $closure, int $backoff = 10, int $retryUntil = 120): mixed
     {
         $seconds = 0;
+        $attempts = 0;
 
         while (true) {
-            $result = $closure();
+            $attempts++;
+
+            $result = $closure($attempts);
 
             if ($result !== null) {
                 return $result;
@@ -35,7 +38,9 @@ final class Utility
      */
     public static function basePath(string $path = ''): string
     {
-        return Utility::normalizePath(__DIR__ . '/../../' . $path);
+        $basePath = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR;
+
+        return Utility::normalizePath($basePath . $path);
     }
 
     /**
@@ -43,22 +48,32 @@ final class Utility
      */
     public static function normalizePath(string $path): string
     {
-        /** @var string */
-        return array_reduce(explode('/', $path), function ($a, $b) {
-            if ($a === null) {
-                $a = "/";
+        $parts = explode(DIRECTORY_SEPARATOR, $path);
+        $absolutes = [];
+
+        foreach ($parts as $part) {
+            if ($part === '') {
+                continue;
             }
 
-            if ($b === "" || $b === ".") {
-                return $a;
+            if ($part === '.') {
+                continue;
             }
 
-            if ($b === "..") {
-                return dirname($a); //@phpstan-ignore-line
+            if ($part === '..') {
+                array_pop($absolutes);
+            } else {
+                $absolutes[] = $part;
             }
+        }
 
-            return preg_replace("/\/+/", "/", "{$a}/{$b}"); //@phpstan-ignore-line
-        });
+        $normalized = implode(DIRECTORY_SEPARATOR, $absolutes);
+
+        if (preg_match('/^[A-Za-z]:$/', $absolutes[0] ?? '')) {
+            return $normalized;
+        }
+
+        return DIRECTORY_SEPARATOR . $normalized;
     }
 
     /**

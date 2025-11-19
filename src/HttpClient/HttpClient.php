@@ -10,9 +10,9 @@ use N1ebieski\KSEFClient\Contracts\HttpClient\HttpClientInterface;
 use N1ebieski\KSEFClient\Contracts\HttpClient\ResponseInterface;
 use N1ebieski\KSEFClient\DTOs\Config;
 use N1ebieski\KSEFClient\DTOs\HttpClient\Request;
-use N1ebieski\KSEFClient\Exceptions\ExceptionHandler;
 use N1ebieski\KSEFClient\Exceptions\HttpClient\AsyncClientNotSupportedException;
 use N1ebieski\KSEFClient\ValueObjects\AccessToken;
+use N1ebieski\KSEFClient\ValueObjects\EncryptionKey;
 use N1ebieski\KSEFClient\ValueObjects\Requests\Sessions\EncryptedKey;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface as BaseResponseInterface;
@@ -25,6 +25,15 @@ final class HttpClient implements HttpClientInterface
         private readonly Config $config,
         private readonly ?LoggerInterface $logger = null
     ) {
+    }
+
+    public function withEncryptionKey(EncryptionKey $encryptionKey): self
+    {
+        return new self(
+            client: $this->client,
+            config: $this->config->withEncryptionKey($encryptionKey),
+            logger: $this->logger
+        );
     }
 
     public function withEncryptedKey(EncryptedKey $encryptedKey): self
@@ -92,10 +101,7 @@ final class HttpClient implements HttpClientInterface
             $this->logger->debug('Sending request to KSEF', $request->toArray());
         }
 
-        $response = new Response(
-            baseResponse: $this->client->sendRequest($clientRequest),
-            exceptionHandler: new ExceptionHandler($this->logger)
-        );
+        $response = new Response($this->client->sendRequest($clientRequest));
 
         $response->throwExceptionIfError();
 
@@ -125,10 +131,7 @@ final class HttpClient implements HttpClientInterface
                     return $response;
                 }
 
-                return new Response(
-                    baseResponse: $response,
-                    exceptionHandler: new ExceptionHandler($this->logger)
-                );
+                return new Response($response);
             }, $clientResponses);
 
             if ($this->logger instanceof LoggerInterface) {

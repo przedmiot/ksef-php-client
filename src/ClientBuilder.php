@@ -10,12 +10,15 @@ use Http\Discovery\Psr18ClientDiscovery;
 use InvalidArgumentException;
 use N1ebieski\KSEFClient\Actions\ConvertDerToPem\ConvertDerToPemAction;
 use N1ebieski\KSEFClient\Actions\ConvertDerToPem\ConvertDerToPemHandler;
+use N1ebieski\KSEFClient\Contracts\Exception\ExceptionHandlerInterface;
 use N1ebieski\KSEFClient\Contracts\HttpClient\ClientInterface;
 use N1ebieski\KSEFClient\Contracts\HttpClient\ResponseInterface;
 use N1ebieski\KSEFClient\Contracts\Resources\ClientResourceInterface;
 use N1ebieski\KSEFClient\DTOs\Config;
 use N1ebieski\KSEFClient\DTOs\Requests\Auth\ContextIdentifierGroup;
 use N1ebieski\KSEFClient\DTOs\Requests\Auth\XadesSignature;
+use N1ebieski\KSEFClient\Exceptions\ExceptionHandler;
+use N1ebieski\KSEFClient\Factories\CertificateFactory;
 use N1ebieski\KSEFClient\Factories\ClientFactory;
 use N1ebieski\KSEFClient\Factories\EncryptedKeyFactory;
 use N1ebieski\KSEFClient\Factories\EncryptedTokenFactory;
@@ -29,6 +32,7 @@ use N1ebieski\KSEFClient\Support\Optional;
 use N1ebieski\KSEFClient\Support\Utility;
 use N1ebieski\KSEFClient\ValueObjects\AccessToken;
 use N1ebieski\KSEFClient\ValueObjects\ApiUrl;
+use N1ebieski\KSEFClient\ValueObjects\Certificate;
 use N1ebieski\KSEFClient\ValueObjects\CertificatePath;
 use N1ebieski\KSEFClient\ValueObjects\EncryptionKey;
 use N1ebieski\KSEFClient\ValueObjects\HttpClient\BaseUri;
@@ -50,12 +54,15 @@ use Psr\Http\Client\ClientInterface as BaseClientInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use RuntimeException;
+use Throwable;
 
 final class ClientBuilder
 {
     private ClientInterface $httpClient;
 
     private ?LoggerInterface $logger = null;
+
+    private ExceptionHandlerInterface $exceptionHandler;
 
     private Mode $mode = Mode::Production;
 
@@ -67,7 +74,7 @@ final class ClientBuilder
 
     private ?RefreshToken $refreshToken = null;
 
-    private ?CertificatePath $certificatePath = null;
+    private ?Certificate $certificate = null;
 
     private NIP | NipVatUe | InternalId | PeppolId $identifier;
 
@@ -76,6 +83,8 @@ final class ClientBuilder
     private Optional | bool $verifyCertificateChain;
 
     private int $asyncMaxConcurrency = 8;
+
+    private bool $validateXml = true;
 
     public function __construct()
     {
@@ -135,7 +144,7 @@ final class ClientBuilder
             $ksefToken = KsefToken::from($ksefToken);
         }
 
-        $this->certificatePath = null;
+        $this->certificate = null;
 
         $this->ksefToken = $ksefToken;
 
@@ -178,9 +187,24 @@ final class ClientBuilder
             $certificatePath = CertificatePath::from($certificatePath, $passphrase);
         }
 
+        $certificate = CertificateFactory::makeFromCertificatePath($certificatePath);
+
+        return $this->withCertificate($certificate);
+    }
+
+    public function withCertificate(Certificate | string $certificate, ?string $privateKey = null, ?string $passphrase = null): self
+    {
+        if ($certificate instanceof Certificate === false) {
+            if ($privateKey === null) {
+                throw new InvalidArgumentException('Private key is required when certificate is string.');
+            }
+
+            $certificate = CertificateFactory::makeFromPkcs8($certificate, $privateKey, $passphrase);
+        }
+
         $this->ksefToken = null;
 
-        $this->certificatePath = $certificatePath;
+        $this->certificate = $certificate;
 
         return $this;
     }
@@ -224,6 +248,13 @@ final class ClientBuilder
         return $this;
     }
 
+    public function withValidateXml(bool $validateXml): self
+    {
+        $this->validateXml = $validateXml;
+
+        return $this;
+    }
+
     /**
      * @param null|LogLevel::* $level
      */
@@ -242,11 +273,19 @@ final class ClientBuilder
         return $this;
     }
 
-    public function build(): ClientResourceInterface
+    public function withExceptionHandler(ExceptionHandlerInterface $exceptionHandler): self
+    {
+        $this->exceptionHandler = $exceptionHandler;
+
+        return $this;
+    }
+
+    public function build(): ClientResource
     {
         $config = new Config(
             baseUri: new BaseUri($this->apiUrl->value),
             asyncMaxConcurrency: $this->asyncMaxConcurrency,
+            validateXml: $this->validateXml,
             accessToken: $this->accessToken,
             refreshToken: $this->refreshToken,
             encryptionKey: $this->encryptionKey,
@@ -258,17 +297,28 @@ final class ClientBuilder
             logger: $this->logger
         );
 
-        $client = new ClientResource($httpClient, $config, $this->logger);
+        $this->exceptionHandler ??= new ExceptionHandler($this->logger);
+
+        $client = new ClientResource(
+            client: $httpClient,
+            config: $config,
+            exceptionHandler: $this->exceptionHandler,
+            logger: $this->logger
+        );
 
         if ($this->encryptionKey instanceof EncryptionKey) {
             $client = $client->withEncryptedKey($this->handleEncryptedKey($client));
         }
 
         if ($this->isAuthorisation()) {
-            $authorisationAccessResponse = match (true) { //@phpstan-ignore-line
-                $this->certificatePath instanceof CertificatePath => $this->handleAuthorisationByCertificate($client),
-                $this->ksefToken instanceof KsefToken => $this->handleAuthorisationByKsefToken($client),
-            };
+            try {
+                $authorisationAccessResponse = match (true) {
+                    $this->certificate instanceof Certificate => $this->handleAuthorisationByCertificate($client),
+                    $this->ksefToken instanceof KsefToken => $this->handleAuthorisationByKsefToken($client),
+                };
+            } catch (Throwable $throwable) {
+                throw $this->exceptionHandler->handle($throwable);
+            }
 
             /** @var object{referenceNumber: string, authenticationToken: object{token: string, validUntil: string}} $authorisationAccessResponse */
             $authorisationAccessResponse = $authorisationAccessResponse->object();
@@ -289,10 +339,10 @@ final class ClientBuilder
                 }
 
                 if ($authorisationStatusResponse->status->code >= 400) {
-                    throw new RuntimeException(
+                    throw $this->exceptionHandler->handle(new RuntimeException(
                         $authorisationStatusResponse->status->description,
                         $authorisationStatusResponse->status->code
-                    );
+                    ));
                 }
             });
 
@@ -316,7 +366,7 @@ final class ClientBuilder
     private function isAuthorisation(): bool
     {
         return ! $this->accessToken instanceof AccessToken && (
-            $this->ksefToken instanceof KsefToken || $this->certificatePath instanceof CertificatePath
+            $this->ksefToken instanceof KsefToken || $this->certificate instanceof Certificate
         );
     }
 
@@ -328,7 +378,8 @@ final class ClientBuilder
 
         $securityResponse = $client->security()->publicKeyCertificates();
 
-        $firstSymmetricKeyEncryptionCertificate = $securityResponse->getFirstByPublicKeyCertificateUsage(PublicKeyCertificateUsage::SymmetricKeyEncryption);
+        $firstSymmetricKeyEncryptionCertificate = $securityResponse
+            ->getFirstByPublicKeyCertificateUsage(PublicKeyCertificateUsage::SymmetricKeyEncryption);
 
         if ($firstSymmetricKeyEncryptionCertificate === null) {
             throw new RuntimeException('Symmetric key encryption certificate is not found');
@@ -348,8 +399,8 @@ final class ClientBuilder
 
     private function handleAuthorisationByCertificate(ClientResourceInterface $client): ResponseInterface
     {
-        if ( ! $this->certificatePath instanceof CertificatePath) {
-            throw new RuntimeException('Certificate path is not set');
+        if ( ! $this->certificate instanceof Certificate) {
+            throw new RuntimeException('Certificate is not set');
         }
 
         /** @var object{challenge: string, timestamp: string} $challengeResponse */
@@ -357,7 +408,7 @@ final class ClientBuilder
 
         return $client->auth()->xadesSignature(
             new XadesSignatureRequest(
-                certificatePath: $this->certificatePath,
+                certificate: $this->certificate,
                 xadesSignature: new XadesSignature(
                     challenge: Challenge::from($challengeResponse->challenge),
                     contextIdentifierGroup: ContextIdentifierGroup::fromIdentifier($this->identifier),
@@ -379,7 +430,8 @@ final class ClientBuilder
 
         $securityResponse = $client->security()->publicKeyCertificates();
 
-        $firstKsefTokenEncryptionCertificate = $securityResponse->getFirstByPublicKeyCertificateUsage(PublicKeyCertificateUsage::KsefTokenEncryption);
+        $firstKsefTokenEncryptionCertificate = $securityResponse
+            ->getFirstByPublicKeyCertificateUsage(PublicKeyCertificateUsage::KsefTokenEncryption);
 
         if ($firstKsefTokenEncryptionCertificate === null) {
             throw new RuntimeException('KSEF token encryption certificate is not found');
